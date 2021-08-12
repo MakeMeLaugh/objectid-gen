@@ -14,8 +14,10 @@ Simple cli tool for working with ObjectID
 For now, `objectid-gen` only available for installation as a Golang module:
 
 ```shell
-go install gitlab.com/MakeMeLaugh/objectid-gen
+go install gitlab.com/MakeMeLaugh/objectid-gen@latest
 ```
+
+If you want to install specific version of the tool just use `@v<version>`
 
 You need to make sure that `$GOBIN` environment variable (usually it's `$GOPATH/bin` or `$HOME/go/bin`) is added to your `$PATH` environment variable.
 
@@ -27,6 +29,8 @@ Of course if you want to build it from source code yourself you are free to clon
 $ go get gitlab.com/MakeMeLaugh/objectid-gen
 $ cd objectid-gen && go build -o /your/desired/path/to/executables
 ```
+
+Or download source code from [Releases](https://gitlab.com/MakeMeLaugh/objectid-gen/-/releases) page for a specific version. Precompiled binary releases will be added sometime later.
 
 # Usage
 
