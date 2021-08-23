@@ -11,11 +11,19 @@ import (
 )
 
 var (
-	utcLoc   *time.Location
-	oidFlag  string
-	tFlag    string
-	agoFlag  string
-	helpFlag bool
+	utcLoc      *time.Location
+	oidFlag     string
+	tFlag       string
+	agoFlag     string
+	helpFlag    bool
+	versionFlag bool
+)
+
+var (
+	applicationName    string
+	applicationVersion string
+	buildAt            string
+	buildFrom          string
 )
 
 func init() {
@@ -24,6 +32,7 @@ func init() {
 	flag.StringVar(&oidFlag, "o", "", `ObjectID to parse and return as datetime (in RFC3339 format)`)
 	flag.StringVar(&tFlag, "t", "", `Time to generate ObjectID from (in RFC3339 format)`)
 	flag.StringVar(&agoFlag, "a", "", `String representation of time in the past to generate ObjectID from (valid time units are "s", "m", "h")`)
+	flag.BoolVar(&versionFlag, "V", false, "Show version number and exit")
 	flag.BoolVar(&helpFlag, "h", false, "Show  this message and exit")
 
 	flag.Parse()
@@ -31,7 +40,15 @@ func init() {
 
 func main() {
 	if helpFlag {
-		flag.Usage()
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", applicationName)
+		flag.PrintDefaults()
+
+		return
+	}
+
+	if versionFlag {
+		fmt.Fprintf(flag.CommandLine.Output(), "Version %s (%s). Build at %s\n",
+			applicationVersion, buildFrom, buildAt)
 
 		return
 	}
