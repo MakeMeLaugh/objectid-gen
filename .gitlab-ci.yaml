@@ -1,0 +1,83 @@
+stages:
+  - prepare_vars
+  - build
+  - upload
+  - release
+
+prepare_vars:
+  stage: .pre
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - |
+      echo "VERSION=${CI_COMMIT_TAG}" | tee -a vars.env
+    - |
+      echo "GO_VERSION=$(grep -oP '^go\s+\K(.+)$' go.mod)" | tee -a vars.env
+    - |
+      echo "DARWIN_AMD64_BINARY=${CI_PROJECT_NAME}-darwin-amd64-$(grep -oP 'VERSION=v\K.+' vars.env)" | tee -a vars.env
+    - |
+      echo "DARWIN_ARM64_BINARY=${CI_PROJECT_NAME}-darwin-arm64-$(grep -oP 'VERSION=v\K.+' vars.env)" | tee -a vars.env
+    - |
+      echo "LINUX_AMD64_BINARY=${CI_PROJECT_NAME}-linux-amd64-$(grep -oP 'VERSION=v\K.+' vars.env)" | tee -a vars.env
+    - |
+      echo "PACKAGE_REGISTRY_URL=${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_NAME}/$(grep -oP 'VERSION=v\K.+' vars.env)" >> vars.env
+    - |
+      echo "X_LD_FLAGS=-X 'main.applicationName=${CI_PROJECT_NAME}' -X 'main.applicationVersion=$(grep -oP 'VERSION=v\K.+' vars.env)' -X 'main.buildAt=${CI_JOB_STARTED_AT}' -X 'main.buildFrom=${CI_COMMIT_SHORT_SHA}'" | tee -a  vars.env
+
+  artifacts:
+    reports:
+      dotenv: vars.env
+    expire_in: 2 minute
+
+build:
+  stage: build
+  needs:
+    - job: prepare_vars
+      artifacts: true
+  image: golang:${GO_VERSION}-alpine
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - mkdir bin
+    - GOOS="darwin" GOARCH="amd64" go build -ldflags="${X_LD_FLAGS}" -o bin/${DARWIN_AMD64_BINARY}
+    - GOOS="darwin" GOARCH="arm64" go build -ldflags="${X_LD_FLAGS}" -o bin/${DARWIN_ARM64_BINARY}
+    - GOOS="linux" GOARCH="amd64" go build -ldflags="${X_LD_FLAGS}" -o bin/${LINUX_AMD64_BINARY}
+  artifacts:
+    paths:
+      - bin/
+    expire_in: 2 minute
+
+upload:
+  stage: upload
+  needs:
+    - job: prepare_vars
+      artifacts: true
+    - job: build
+  image: curlimages/curl:latest
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - |
+      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${DARWIN_AMD64_BINARY} ${PACKAGE_REGISTRY_URL}/${DARWIN_AMD64_BINARY}
+    - |
+      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${DARWIN_ARM64_BINARY} ${PACKAGE_REGISTRY_URL}/${DARWIN_ARM64_BINARY}
+    - |
+      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${LINUX_AMD64_BINARY} ${PACKAGE_REGISTRY_URL}/${LINUX_AMD64_BINARY}
+
+release:
+  # Caution, as of 2021-02-02 these assets links require a login, see:
+  # https://gitlab.com/gitlab-org/gitlab/-/issues/299384
+  stage: release
+  needs:
+    - job: prepare_vars
+      artifacts: true
+    - job: upload
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - |
+      release-cli create --name "Release $CI_COMMIT_TAG" --tag-name $CI_COMMIT_TAG \
+        --assets-link "{\"name\":\"${DARWIN_AMD64_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${DARWIN_AMD64_BINARY}\"}" \
+        --assets-link "{\"name\":\"${DARWIN_ARM64_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${DARWIN_ARM64_BINARY}\"}" \
+        --assets-link "{\"name\":\"${LINUX_AMD64_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${LINUX_AMD64_BINARY}\"}"
