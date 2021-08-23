@@ -14,7 +14,7 @@ Simple cli tool for working with ObjectID
 For now, `objectid-gen` only available for installation as a Golang module:
 
 ```shell
-go install gitlab.com/MakeMeLaugh/objectid-gen@latest
+go install gitlab.com/MakeMeLaugh/objectid-gen
 ```
 
 If you want to install specific version of the tool just use `@v<version>`
@@ -30,12 +30,14 @@ $ go get gitlab.com/MakeMeLaugh/objectid-gen
 $ cd objectid-gen && go build -o /your/desired/path/to/executables
 ```
 
-Or download source code from [Releases](https://gitlab.com/MakeMeLaugh/objectid-gen/-/releases) page for a specific version. Precompiled binary releases will be added sometime later.
+Or download source code from [Releases](https://gitlab.com/MakeMeLaugh/objectid-gen/-/releases) page for a specific version.
+Precompiled binary releases for Linux (amd64) and MacOS (arm64 and amd64) are also available under Releases page of this repo.
 
 # Usage
 
 ```shell
 Usage of objectid-gen:
+  -V    Show version number and exit
   -a string
         String representation of time in the past to generate ObjectID from (valid time units are "s", "m", "h")
   -h    Show  this message and exit
