@@ -47,7 +47,7 @@ Usage of objectid-gen:
   -o string
         ObjectID to parse and return as datetime (in RFC3339 format)
   -t string
-        Time to generate ObjectID from (in RFC3339 format)
+        Time to generate ObjectID from datetime (in RFC3339 format)
 ```
 
 # Examples
@@ -59,14 +59,14 @@ $ objectid-gen
 6112e51d9357733c89798a85
 ```
 
-### Extract timestamp from existing ObjectID
+### Extract datetime (RFC3339 string) from existing ObjectID
 
 ```shell
 $ objectid-gen -o 6112e51d9357733c89798a85
 2021-08-10T23:44:13+03:00
 ```
 
-### Convert timestamp to ObjectID string
+### Convert datetime (RFC3339 string) to ObjectID string
 
 ```shell
 $ objectid-gen -t '2021-08-10T23:44:13+03:00'
