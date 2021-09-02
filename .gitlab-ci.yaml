@@ -21,8 +21,6 @@ prepare_vars:
       echo "LINUX_AMD64_BINARY=${CI_PROJECT_NAME}-linux-amd64-$(grep -oP 'VERSION=v\K.+' vars.env)" | tee -a vars.env
     - |
       echo "PACKAGE_REGISTRY_URL=${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_NAME}/$(grep -oP 'VERSION=v\K.+' vars.env)" >> vars.env
-    - |
-      echo "X_LD_FLAGS=-X 'main.applicationName=${CI_PROJECT_NAME}' -X 'main.applicationVersion=$(grep -oP 'VERSION=v\K.+' vars.env)' -X 'main.buildAt=${CI_JOB_STARTED_AT}' -X 'main.buildFrom=${CI_COMMIT_SHORT_SHA}'" | tee -a  vars.env
 
   artifacts:
     reports:
@@ -38,10 +36,7 @@ build:
   rules:
     - if: $CI_COMMIT_TAG
   script:
-    - mkdir bin
-    - GOOS="darwin" GOARCH="amd64" go build -ldflags="${X_LD_FLAGS}" -o bin/${DARWIN_AMD64_BINARY}
-    - GOOS="darwin" GOARCH="arm64" go build -ldflags="${X_LD_FLAGS}" -o bin/${DARWIN_ARM64_BINARY}
-    - GOOS="linux" GOARCH="amd64" go build -ldflags="${X_LD_FLAGS}" -o bin/${LINUX_AMD64_BINARY}
+    - make build
   artifacts:
     paths:
       - bin/
