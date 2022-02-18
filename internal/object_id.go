@@ -36,10 +36,16 @@ func (o ObjectID) GetTimestamp() time.Time {
 	return time.Unix(int64(binary.BigEndian.Uint32(o[0:4])), 0)
 }
 
-// NewObjectIDFromTimestamp generates new ObjectID from timestamp t
+// NewObjectIDFromTimestamp generates new ObjectID from timestamp t.
+//
+// Will return "zero" ObjectID if t.Unix is negative
 func NewObjectIDFromTimestamp(t time.Time) ObjectID {
+	unix := t.Unix()
+	if unix < 0 {
+		unix = 0
+	}
 	var b [12]byte
-	binary.BigEndian.PutUint32(b[0:4], uint32(t.Unix()))
+	binary.BigEndian.PutUint32(b[0:4], uint32(unix))
 	// there is no point in generating random bytes here,
 	// so we can easily fill final spots in array with zeros
 	copy(b[4:9], zeros[:])
