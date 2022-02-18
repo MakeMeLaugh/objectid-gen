@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	objID "gitlab.com/MakeMeLaugh/objectid-gen/internal"
+	oid "gitlab.com/MakeMeLaugh/objectid-gen/internal"
 )
 
 var (
@@ -20,20 +20,24 @@ var (
 )
 
 var (
-	applicationName    string
-	applicationVersion string
-	buildAt            string
-	buildFrom          string
+	// Used as an application name while generating help message
+	applicationName = "objectid-gen"
+	// Application version (used in -V flag)
+	applicationVersion = ""
+	// Time when application was built at (used in -V flag)
+	buildAt = time.Now().Format(time.RFC3339)
+	// Short commit hash that was used for building the application (used in -V flag)
+	buildFrom string
 )
 
 func init() {
 	utcLoc, _ = time.LoadLocation("")
 
 	flag.StringVar(&oidFlag, "o", "", `ObjectID to parse and return as datetime (in RFC3339 format)`)
-	flag.StringVar(&tFlag, "t", "", `Time to generate ObjectID from (in RFC3339 format)`)
+	flag.StringVar(&tFlag, "t", "", `Datetime to generate ObjectID from (in RFC3339 format)`)
 	flag.StringVar(&agoFlag, "a", "", `String representation of time in the past to generate ObjectID from (valid time units are "s", "m", "h")`)
 	flag.BoolVar(&versionFlag, "V", false, "Show version number and exit")
-	flag.BoolVar(&helpFlag, "h", false, "Show  this message and exit")
+	flag.BoolVar(&helpFlag, "h", false, "Show this message and exit")
 
 	flag.Parse()
 }
@@ -63,15 +67,15 @@ func main() {
 		}
 
 		if len(s) != 12 {
-			fmt.Fprintln(os.Stderr, objID.ErrInvalidObjectIDLength)
+			fmt.Fprintln(os.Stderr, oid.ErrInvalidObjectIDLength)
 
 			os.Exit(1)
 		}
 
-		var oid [12]byte
-		copy(oid[:], s)
+		var o [12]byte
+		copy(o[:], s)
 
-		fmt.Println(objID.ObjectID(oid).GetTimestamp().Local().Format(time.RFC3339))
+		fmt.Println(oid.ObjectID(o).GetTimestamp().Local().Format(time.RFC3339))
 	case tFlag != "":
 		t, err := time.ParseInLocation(time.RFC3339, tFlag, utcLoc)
 		if err != nil {
@@ -80,17 +84,20 @@ func main() {
 			os.Exit(1)
 		}
 
-		fmt.Println(objID.NewObjectIDFromTimestamp(t).String())
+		fmt.Println(oid.NewObjectIDFromTimestamp(t).String())
 	case agoFlag != "":
-		dur, err := time.ParseDuration("-" + agoFlag)
+		if agoFlag[0] != '-' {
+			agoFlag = "-" + agoFlag
+		}
+		dur, err := time.ParseDuration(agoFlag)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err.Error())
 
 			os.Exit(1)
 		}
 
-		fmt.Println(objID.NewObjectIDFromTimestamp(time.Now().Add(dur)).String())
+		fmt.Println(oid.NewObjectIDFromTimestamp(time.Now().Add(dur)).String())
 	default:
-		fmt.Println(objID.NewObjectID())
+		fmt.Println(oid.NewObjectID())
 	}
 }

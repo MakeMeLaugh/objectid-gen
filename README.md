@@ -4,37 +4,73 @@ Simple cli tool for working with ObjectID
 
 # Features
 
-* Generating ObjectID from current timestamp;
-* Converting existing timestamp (in RFC3339 format) to ObjectID form (padded with zeros to the right);
+* Generate ObjectID from current timestamp;
+* Convert existing timestamp (in RFC3339 format) to ObjectID form (padded with zeros to the right);
 * Generate ObjectID from relative point in time in the past (e.g. 1 hour 21 minutes and 42 seconds ago);
-* Extracting timestamp from existing ObjectID string;
+* Extract timestamp from existing ObjectID string;
 
 # Installation
 
-Precompiled binary releases for Linux (amd64) and MacOS (arm64 and amd64) are also available under [Releases](https://gitlab.com/MakeMeLaugh/objectid-gen/-/releases) page of this repo.
+## Precompiled binaries
+
+Precompiled binary releases for Linux (amd64), MacOS (arm64 and amd64) and Windows (amd64) are available under [Releases](https://gitlab.com/MakeMeLaugh/objectid-gen/-/releases) page of this repo.
 
 ---
 
-You can also install `objectid-gen` using Golang toolchain:
+## Install using Golang toolchain
+
+Installing `objectid-gen` using Golang toolchain:
 
 ```shell
 go install gitlab.com/MakeMeLaugh/objectid-gen@<version>
 ```
 
-Available versions match [releases](https://gitlab.com/MakeMeLaugh/objectid-gen/-/releases) names.
+Available versions match [releases](https://gitlab.com/MakeMeLaugh/objectid-gen/-/releases) names. Be aware that `@latest` version relates to the HEAD of the `main` branch and might be in "work in progress" state. Consider using only named tagged versions.
 
 You need to make sure that `$GOBIN` environment variable (usually it's `$GOPATH/bin` or `$HOME/go/bin`) is added to your `$PATH` environment variable.
 
----
+## Building manually using Golang
 
-Of course if you want to build it from source code yourself you are free to clone this repo or get it using Golang toolchain and build it manually:
+If you want to build it from source code yourself you are free to "go get" this repo and build it manually:
 
 ```shell
 $ go get gitlab.com/MakeMeLaugh/objectid-gen
 $ cd objectid-gen && go build -o /your/desired/path/to/executables
 ```
 
-Or download source code from [Releases](https://gitlab.com/MakeMeLaugh/objectid-gen/-/releases) page for a specific version.
+The `main` package provides some compile-time variables which can be set during compilation (there are no defaults for these variables) with `-ldflags '-X main.<variable>=<value>'`:
+
+```go
+var (
+    // Used as an application name while generating help message
+    applicationName string
+    // Application version (used in -V flag)
+    applicationVersion string
+    // Time when application was built at (used in -V flag)
+    buildAt string
+    // Short commit hash that was used for building the application (used in -V flag)
+    buildFrom string
+)
+```
+
+## Building from source
+
+Download source code from [Releases](https://gitlab.com/MakeMeLaugh/objectid-gen/-/releases) page for a specific version or just clone this repo and run `make`:
+
+```shell
+git clone git@gitlab.com:MakeMeLaugh/objectid-gen.git
+# or git clone https://gitlab.com/MakeMeLaugh/objectid-gen.git
+cd objectid-gen && make
+```
+
+By default, `make` will build binaries for every supported platform (`darwin/amd64`, `darwin/arm64`, `linux/amd64`,  and `windows/amd64`) which will be placed under `bin` directory inside the repo folder. If you want to override this behavior - run make with `BUILD_PLATFORMS` set to your platform:
+
+```shell
+make BUILD_PLATFORMS=darwin/amd64
+```
+
+Note that `make` recreates content of the `bin` directory (removes everything from it) on each call.
+This behavior cannot be overridden.
 
 # Usage
 
@@ -47,7 +83,7 @@ Usage of objectid-gen:
   -o string
         ObjectID to parse and return as datetime (in RFC3339 format)
   -t string
-        Time to generate ObjectID from datetime (in RFC3339 format)
+        Datetime to generate ObjectID from (in RFC3339 format)
 ```
 
 # Examples
