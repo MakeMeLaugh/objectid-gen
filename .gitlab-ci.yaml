@@ -21,7 +21,11 @@ prepare_vars:
     - |
       echo "WIN_AMD64_BINARY=${CI_PROJECT_NAME}-windows-amd64-$(grep -oP 'VERSION=\Kv.+' vars.env).exe" | tee -a vars.env
     - |
-      echo "PACKAGE_REGISTRY_URL=${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_NAME}/$(grep -oP 'VERSION=\Kv.+' vars.env)" >> vars.env
+      echo "PACKAGE_REGISTRY_URL=${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_NAME}/$(grep -oP 'VERSION=\Kv.+' vars.env)" | tee -a vars.env
+    - |
+      ([[ "${CI_COMMIT_TAG}" != "" ]] && \
+        [[ $(git rev-parse -n 1 "${CI_COMMIT_TAG}") == $(git rev-parse -n 1 "${CI_DEFAULT_BRANCH}") ]]) && \
+        echo "MAKE_RELEASE=true" | tee -a vars.env || true 
 
   artifacts:
     reports:
@@ -59,7 +63,7 @@ upload:
       artifacts: true
   image: curlimages/curl:latest
   rules:
-    - if: ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_TAG)
+    - if: $MAKE_RELEASE == "true"
   script:
     - |
       curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${DARWIN_AMD64_BINARY} ${PACKAGE_REGISTRY_URL}/${DARWIN_AMD64_BINARY}
@@ -80,11 +84,11 @@ release:
     - job: upload
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   rules:
-    - if: ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_TAG)
+    - if: $MAKE_RELEASE == "true"
   script:
     - |
       release-cli create --name "$CI_COMMIT_TAG" --tag-name $CI_COMMIT_TAG \
         --assets-link "{\"name\":\"${DARWIN_AMD64_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${DARWIN_AMD64_BINARY}\"}" \
         --assets-link "{\"name\":\"${DARWIN_ARM64_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${DARWIN_ARM64_BINARY}\"}" \
-        --assets-link "{\"name\":\"${LINUX_AMD64_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${LINUX_AMD64_BINARY}\"}"
+        --assets-link "{\"name\":\"${LINUX_AMD64_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${LINUX_AMD64_BINARY}\"}" \
         --assets-link "{\"name\":\"${WIN_AMD64_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${WIN_AMD64_BINARY}\"}"
